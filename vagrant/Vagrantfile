@@ -1,0 +1,41 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos64_ja"
+  config.vm.box_url = "https://dl.dropboxusercontent.com/u/3657281/centos64_ja.box"
+
+  config.vm.define :fuel_web do |web|
+    web.vm.network :private_network, ip: "192.168.33.103"
+  end
+
+  config.vm.synced_folder "../", "/var/www/html", :create => true, :owner=> 'vagrant', :group=>'vagrant', :mount_options => ['dmode=777,fmode=755']
+  
+  #  ==> fuel_web: Mounting shared folders...
+  # fuel_web: /vagrant => D:/chau/code/fuelphp-sample-day3/vagrant
+  # fuel_web: /var/www/html => D:/chau/code/fuelphp-sample-day3
+  # fuel_web: /tmp/vagrant-chef-3/chef-solo-1/cookbooks => D:/chau/code/fuelphp-sample-day3/vagrant/cookbooks
+  
+  # ==> web1: Mounting shared folders...
+  # web1: /vagrant => D:/chau/test/vtlabo-training-php-api/vagrant
+  # web1: /var/www/html => D:/chau/test/vtlabo-training-php-api
+  # web1: /tmp/vagrant-chef-3/chef-solo-1/cookbooks => D:/chau/test/vtlabo-training-php-api/vagrant/cookbooks
+
+  config.vm.provider :virtualbox do |vb|
+    #vb.customize ["modifyvm", :id, "--memory", 1024]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+
+  config.vm.provision :chef_solo do |chef|
+    chef.add_recipe "base"
+    chef.add_recipe "php-mysql-httpd"
+    # chef.add_recipe "php-api"
+    chef.add_recipe "composer"
+    chef.json = {
+      :composer => {
+        :install_path => "/usr/local/bin"
+      }
+    }
+  end
+end
